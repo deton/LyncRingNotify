@@ -3,14 +3,7 @@
 // https://msdn.microsoft.com/en-us/library/hh530042.aspx
 // http://www.mztm.jp/2013/03/17/serialcommnunication/
 using System;
-using System.Collections.Generic;
-using System.ComponentModel;
-using System.Data;
-using System.Drawing;
-using System.Linq;
-using System.Text;
 using System.Windows.Forms;
-using System.IO.Ports;
 using Microsoft.Lync.Model;
 using Microsoft.Lync.Model.Conversation;
 using LyncRingNotify.Properties;
@@ -21,7 +14,7 @@ namespace LyncRingNotify
     public partial class Form1 : Form
     {
         private bool _avaiableSerialAndLync = false;
-        private SerialPort _serial;
+        private Vibrator _vibrator;
         private LyncClient _lyncClient;
 
         public Form1()
@@ -30,14 +23,15 @@ namespace LyncRingNotify
             ShowInTaskbar = false;
             WindowState = FormWindowState.Minimized;
 
-            _serial = new SerialPort(Settings.Default.ComPort, 115200);
             try
             {
-                _serial.Open();
+                _vibrator = new Vibrator(Settings.Default.ComPort);
             }
             catch (System.IO.IOException ex)
             {
-                MessageBox.Show("Failed to open COM port: " + ex.Message, "LyncRingNotify Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                MessageBox.Show("Failed to open COM port: " + ex.Message,
+                        "LyncRingNotify Error", MessageBoxButtons.OK,
+                        MessageBoxIcon.Error);
                 return;
             }
 
@@ -49,7 +43,9 @@ namespace LyncRingNotify
             }
             catch (ClientNotFoundException ex)
             {
-                MessageBox.Show("Failed to get Lync client: " + ex.Message, "LyncRingNotify Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                MessageBox.Show("Failed to get Lync client: " + ex.Message,
+                        "LyncRingNotify Error", MessageBoxButtons.OK,
+                        MessageBoxIcon.Error);
             }
         }
 
@@ -68,7 +64,8 @@ namespace LyncRingNotify
         {
             var conversation = e.Conversation;
 
-            // Test conversation state. If inactive, then the new conversation window was opened by the user, not a remote participant
+            // Test conversation state. If inactive, then the new conversation
+            // window was opened by the user, not a remote participant
             if (conversation.State == ConversationState.Inactive)
             {
                 return;
@@ -78,7 +75,7 @@ namespace LyncRingNotify
             if (ModalityIsNotified(conversation, ModalityTypes.InstantMessage))
             {
                 hasInstantMessaging = true;
-                _serial.Write("v128.");
+                _vibrator.Vibrate(128);
                 conversation.Modalities[ModalityTypes.InstantMessage].ModalityStateChanged += IMModalityStateChanged;
                 conversation.StateChanged += IMStateChanged;
                 Debug.WriteLine("IM Notified");
@@ -87,7 +84,7 @@ namespace LyncRingNotify
             if (ModalityIsNotified(conversation, ModalityTypes.AudioVideo))
             {
                 hasAudioVideo = true;
-                _serial.Write("v512.");
+                _vibrator.Vibrate(512);
                 conversation.Modalities[ModalityTypes.AudioVideo].ModalityStateChanged += AVModalityStateChanged;
                 conversation.StateChanged += AVStateChanged;
                 Debug.WriteLine("AV Notified");
@@ -109,15 +106,15 @@ namespace LyncRingNotify
             switch (e.NewState)
             {
                 case ModalityState.Connected:
-                    _serial.Write("v0.");
+                    _vibrator.Off();
                     Debug.WriteLine("IM Modality Connected");
                     break;
                 case ModalityState.Disconnected:
-                    _serial.Write("v0.");
+                    _vibrator.Off();
                     Debug.WriteLine("IM Modality Disconnected");
                     break;
                 case ModalityState.Joining:
-                    _serial.Write("v0.");
+                    _vibrator.Off();
                     Debug.WriteLine("IM Modality Joining");
                     break;
             }
@@ -128,11 +125,11 @@ namespace LyncRingNotify
             switch (e.NewState)
             {
                 case ConversationState.Parked:
-                    _serial.Write("v0.");
+                    _vibrator.Off();
                     Debug.WriteLine("IM Parked");
                     break;
                 case ConversationState.Terminated:
-                    _serial.Write("v0.");
+                    _vibrator.Off();
                     Debug.WriteLine("IM Terminated");
                     break;
             }
@@ -143,15 +140,15 @@ namespace LyncRingNotify
             switch (e.NewState)
             {
                 case ModalityState.Connected:
-                    _serial.Write("v0.");
+                    _vibrator.Off();
                     Debug.WriteLine("AV Modality Connected");
                     break;
                 case ModalityState.Disconnected:
-                    _serial.Write("v0.");
+                    _vibrator.Off();
                     Debug.WriteLine("AV Modality Disconnected");
                     break;
                 case ModalityState.Joining:
-                    _serial.Write("v0.");
+                    _vibrator.Off();
                     Debug.WriteLine("AV Modality Joining");
                     break;
             }
@@ -163,11 +160,11 @@ namespace LyncRingNotify
             switch (e.NewState)
             {
                 case ConversationState.Parked:
-                    _serial.Write("v0.");
+                    _vibrator.Off();
                     Debug.WriteLine("AV Parked");
                     break;
                 case ConversationState.Terminated:
-                    _serial.Write("v0.");
+                    _vibrator.Off();
                     Debug.WriteLine("AV Terminated");
                     break;
             }
@@ -181,10 +178,10 @@ namespace LyncRingNotify
 
         private void Form1_FormClosing(object sender, FormClosingEventArgs e)
         {
-            if (_serial.IsOpen)
+            if (_vibrator != null)
             {
-                _serial.Write("v0.");
-                _serial.Close();
+                _vibrator.Off();
+                _vibrator.Close();
             }
         }
 
@@ -196,9 +193,9 @@ namespace LyncRingNotify
 
         private void notifyIcon1_Click(object sender, EventArgs e)
         {
-            if (_serial.IsOpen)
+            if (_vibrator != null)
             {
-                _serial.Write("v0."); // vibration off
+                _vibrator.Off();
             }
         }
     }

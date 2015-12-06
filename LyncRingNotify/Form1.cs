@@ -19,6 +19,7 @@ namespace LyncRingNotify
 {
     public partial class Form1 : Form
     {
+        private bool _avaiableSerialAndLync = false;
         private SerialPort _serial;
         private LyncClient _lyncClient;
         private delegate void DelegateWrite(string data);
@@ -26,11 +27,41 @@ namespace LyncRingNotify
         public Form1()
         {
             InitializeComponent();
-            _serial = new SerialPort(Settings.Default.ComPort, 115200);
-            _serial.Open();
+            ShowInTaskbar = false;
+            WindowState = FormWindowState.Minimized;
 
-            _lyncClient = LyncClient.GetClient();
-            _lyncClient.ConversationManager.ConversationAdded += ConversationManager_ConversationAdded;
+            _serial = new SerialPort(Settings.Default.ComPort, 115200);
+            try
+            {
+                _serial.Open();
+            }
+            catch (System.IO.IOException ex)
+            {
+                MessageBox.Show("Failed to open COM port: " + ex.Message, "LyncRingNotify Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                return;
+            }
+
+            try
+            {
+                _lyncClient = LyncClient.GetClient();
+                _lyncClient.ConversationManager.ConversationAdded += ConversationManager_ConversationAdded;
+                _avaiableSerialAndLync = true;
+            }
+            catch (ClientNotFoundException ex)
+            {
+                MessageBox.Show("Failed to get Lync client: " + ex.Message, "LyncRingNotify Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+        }
+
+        private void Form1_Load(object sender, EventArgs e)
+        {
+            if (!_avaiableSerialAndLync)
+            {
+                notifyIcon1.Visible = false;
+                Close();
+                return;
+            }
+            Hide();
         }
 
         void ConversationManager_ConversationAdded(object sender, Microsoft.Lync.Model.Conversation.ConversationManagerEventArgs e)
@@ -165,6 +196,20 @@ namespace LyncRingNotify
             {
                 _serial.Write("v0.");
                 _serial.Close();
+            }
+        }
+
+        private void exitToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            notifyIcon1.Visible = false;
+            Application.Exit();
+        }
+
+        private void notifyIcon1_Click(object sender, EventArgs e)
+        {
+            if (_serial.IsOpen)
+            {
+                _serial.Write("v0."); // vibration off
             }
         }
     }

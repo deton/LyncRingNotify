@@ -41,22 +41,23 @@ namespace LyncRingNotify
             // Register for the ParticipantAdded event on the conversation
             conversation.ParticipantAdded += Conversation_ParticipantAdded;
 
-            conversation.Modalities[ModalityTypes.InstantMessage].ModalityStateChanged += IMModalityStateChanged;
-            conversation.Modalities[ModalityTypes.AudioVideo].ModalityStateChanged += AVModalityStateChanged;
-
             bool hasInstantMessaging = false;
             if (ModalityIsNotified(conversation, ModalityTypes.InstantMessage))
             {
                 hasInstantMessaging = true;
+                _serial.Write("v128.");
+                conversation.Modalities[ModalityTypes.InstantMessage].ModalityStateChanged += IMModalityStateChanged;
+                conversation.StateChanged += IMStateChanged;
                 Invoke(new DelegateWrite(Write), new Object[] {"IM Notified"});
-                _serial.Write("y");
             }
             bool hasAudioVideo = false;
             if (ModalityIsNotified(conversation, ModalityTypes.AudioVideo))
             {
                 hasAudioVideo = true;
+                _serial.Write("v512.");
+                conversation.Modalities[ModalityTypes.AudioVideo].ModalityStateChanged += AVModalityStateChanged;
+                conversation.StateChanged += AVStateChanged;
                 Invoke(new DelegateWrite(Write), new Object[] {"AV Notified"});
-                _serial.Write("r");
             }
 
             // Get the URI of the "Inviter" contact
@@ -105,12 +106,31 @@ namespace LyncRingNotify
             switch (e.NewState)
             {
                 case ModalityState.Connected:
-                    _serial.Write("o");
+                    _serial.Write("v0.");
                     Invoke(new DelegateWrite(Write), new Object[] {"IM Modality Connected"});
                     break;
                 case ModalityState.Disconnected:
+                    _serial.Write("v0.");
                     Invoke(new DelegateWrite(Write), new Object[] {"IM Modality Disconnected"});
-                    _serial.Write("o");
+                    break;
+                case ModalityState.Joining:
+                    _serial.Write("v0.");
+                    Invoke(new DelegateWrite(Write), new Object[] {"IM Modality Joining"});
+                    break;
+            }
+        }
+
+        void IMStateChanged(object sender, ConversationStateChangedEventArgs e)
+        {
+            switch (e.NewState)
+            {
+                case ConversationState.Parked:
+                    _serial.Write("v0.");
+                    Invoke(new DelegateWrite(Write), new Object[] {"IM Parked"});
+                    break;
+                case ConversationState.Terminated:
+                    _serial.Write("v0.");
+                    Invoke(new DelegateWrite(Write), new Object[] {"IM Terminated"});
                     break;
             }
         }
@@ -120,12 +140,32 @@ namespace LyncRingNotify
             switch (e.NewState)
             {
                 case ModalityState.Connected:
-                    _serial.Write("o");
+                    _serial.Write("v0.");
                     Invoke(new DelegateWrite(Write), new Object[] {"AV Modality Connected"});
                     break;
                 case ModalityState.Disconnected:
+                    _serial.Write("v0.");
                     Invoke(new DelegateWrite(Write), new Object[] {"AV Modality Disconnected"});
-                    _serial.Write("o");
+                    break;
+                case ModalityState.Joining:
+                    _serial.Write("v0.");
+                    Invoke(new DelegateWrite(Write), new Object[] {"AV Modality Joining"});
+                    break;
+            }
+        }
+
+        void AVStateChanged(object sender, ConversationStateChangedEventArgs e)
+        {
+            // current user didn't joined the conversation (timout/close/voice message)
+            switch (e.NewState)
+            {
+                case ConversationState.Parked:
+                    _serial.Write("v0.");
+                    Invoke(new DelegateWrite(Write), new Object[] {"AV Parked"});
+                    break;
+                case ConversationState.Terminated:
+                    _serial.Write("v0.");
+                    Invoke(new DelegateWrite(Write), new Object[] {"AV Terminated"});
                     break;
             }
         }
@@ -151,6 +191,7 @@ namespace LyncRingNotify
         {
             if (_serial.IsOpen)
             {
+                _serial.Write("v0.");
                 _serial.Close();
             }
         }

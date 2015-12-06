@@ -1,8 +1,12 @@
 // https://www.pjrc.com/teensy/td_libs_TimerOne.html
 #include <TimerThree.h>
 
-const int MOTORPIN = 5;
+const int MOTORPIN = 5; // Timer3 PWM for Pololu A-Star 32U4 Micro (ATmega32U4)
+const int SWPIN = 2;
 const int32_t DEFAULT_PERIOD = 900000; // 900ms. default timer period
+
+const int SWON = LOW;
+const int SWOFF = HIGH;
 
 enum {
     PARSER_DUTY = 1,
@@ -79,10 +83,14 @@ void setup()
 {
     Serial.begin(115200);
     Timer3.initialize(DEFAULT_PERIOD);
+    pinMode(SWPIN, INPUT_PULLUP);
 }
 
 void loop()
 {
+    if (digitalRead(SWPIN) == SWON) {
+        Timer3.pwm(MOTORPIN, 0); // vibration off
+    }
     while (Serial.available()) {
         int letter = Serial.read();
         parseMessage(letter);

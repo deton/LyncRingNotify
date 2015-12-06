@@ -1,4 +1,8 @@
-﻿using System;
+﻿// https://web.archive.org/web/20120224054715/http://www.codelync.com/2011/11/developing-screen-pop-applications
+// https://github.com/sierrodc/Arduino-Lync-monitor
+// https://msdn.microsoft.com/en-us/library/hh530042.aspx
+// http://www.mztm.jp/2013/03/17/serialcommnunication/
+using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
@@ -9,6 +13,7 @@ using System.Windows.Forms;
 using System.IO.Ports;
 using Microsoft.Lync.Model;
 using Microsoft.Lync.Model.Conversation;
+using LyncRingNotify.Properties;
 
 namespace LyncRingNotify
 {
@@ -21,7 +26,7 @@ namespace LyncRingNotify
         public Form1()
         {
             InitializeComponent();
-            _serial = new SerialPort("COM10", 115200);
+            _serial = new SerialPort(Settings.Default.ComPort, 115200);
             _serial.Open();
 
             _lyncClient = LyncClient.GetClient();
@@ -37,9 +42,6 @@ namespace LyncRingNotify
             {
                 return;
             }
-
-            // Register for the ParticipantAdded event on the conversation
-            conversation.ParticipantAdded += Conversation_ParticipantAdded;
 
             bool hasInstantMessaging = false;
             if (ModalityIsNotified(conversation, ModalityTypes.InstantMessage))
@@ -68,36 +70,6 @@ namespace LyncRingNotify
                         remoteParticipant,
                         hasInstantMessaging,
                         hasAudioVideo)
-                });
-        }
-
-        void Conversation_ParticipantAdded(object sender, ParticipantCollectionChangedEventArgs e)
-        {
-            var participant = e.Participant;
-
-            // We're not interested in notifying on our own IM's, so return
-            if (participant.IsSelf)
-            {
-                return;
-            }
-
-            // Get the InstantMessage modality, and register to the InstantMessageReceived event
-            var imModality = (InstantMessageModality)e.Participant.Modalities[ModalityTypes.InstantMessage];
-            imModality.InstantMessageReceived += ImModality_InstantMessageReceived;
-        }
-
-        void ImModality_InstantMessageReceived(object sender, MessageSentEventArgs e)
-        {
-            // Get the instant mesage modality that raised this event, and the contact that it belongs to
-            var imModality = (InstantMessageModality)sender;
-            var contact = imModality.Participant.Contact;
-
-            var instantMessageText = e.Text;
-
-            Invoke(new DelegateWrite(Write), new Object[] {
-                    string.Format("Caller: {0}\r\nText: {1}",
-                        contact.Uri,
-                        instantMessageText)
                 });
         }
 

@@ -13,8 +13,6 @@ namespace LyncRingNotify
 {
     public partial class Form1 : Form
     {
-        private bool _avaiableSerialAndLync = false;
-        private Vibrator _vibrator;
         private LyncClient _lyncClient;
 
         public Form1()
@@ -25,38 +23,24 @@ namespace LyncRingNotify
 
             try
             {
-                _vibrator = new Vibrator(Settings.Default.ComPort);
-            }
-            catch (System.IO.IOException ex)
-            {
-                MessageBox.Show("Failed to open COM port: " + ex.Message,
-                        "LyncRingNotify Error", MessageBoxButtons.OK,
-                        MessageBoxIcon.Error);
-                return;
-            }
-
-            try
-            {
                 _lyncClient = LyncClient.GetClient();
                 _lyncClient.ConversationManager.ConversationAdded += ConversationManager_ConversationAdded;
-                _avaiableSerialAndLync = true;
             }
             catch (ClientNotFoundException ex)
             {
                 MessageBox.Show("Failed to get Lync client: " + ex.Message,
                         "LyncRingNotify Error", MessageBoxButtons.OK,
                         MessageBoxIcon.Error);
+                Load += (s, e) =>
+                {
+                    notifyIcon1.Visible = false;
+                    Close();
+                };
             }
         }
 
         private void Form1_Load(object sender, EventArgs e)
         {
-            if (!_avaiableSerialAndLync)
-            {
-                notifyIcon1.Visible = false;
-                Close();
-                return;
-            }
             Hide();
         }
 
@@ -71,11 +55,12 @@ namespace LyncRingNotify
                 return;
             }
 
+            string notifyParam = "";
             bool hasInstantMessaging = false;
             if (ModalityIsNotified(conversation, ModalityTypes.InstantMessage))
             {
                 hasInstantMessaging = true;
-                _vibrator.Vibrate(128);
+                notifyParam = "im";
                 conversation.Modalities[ModalityTypes.InstantMessage].ModalityStateChanged += IMModalityStateChanged;
                 conversation.StateChanged += IMStateChanged;
                 Debug.WriteLine("IM Notified");
@@ -84,7 +69,7 @@ namespace LyncRingNotify
             if (ModalityIsNotified(conversation, ModalityTypes.AudioVideo))
             {
                 hasAudioVideo = true;
-                _vibrator.Vibrate(512);
+                notifyParam = "audio";
                 conversation.Modalities[ModalityTypes.AudioVideo].ModalityStateChanged += AVModalityStateChanged;
                 conversation.StateChanged += AVStateChanged;
                 Debug.WriteLine("AV Notified");
@@ -92,7 +77,9 @@ namespace LyncRingNotify
 
             // Get the URI of the "Inviter" contact
             var remoteParticipant = ((Contact)conversation.Properties[ConversationProperty.Inviter]).Uri;
+            notifyParam += " " + remoteParticipant;
 
+            CallNotifier(notifyParam);
             Debug.WriteLine(
                     string.Format("Incoming Call\r\nCaller: {0}\r\nHas Instant Messaging: {1}\r\nHas Audio/Video: {2}",
                         remoteParticipant,
@@ -106,15 +93,15 @@ namespace LyncRingNotify
             switch (e.NewState)
             {
                 case ModalityState.Connected:
-                    _vibrator.Off();
+                    CallNotifier("off");
                     Debug.WriteLine("IM Modality Connected");
                     break;
                 case ModalityState.Disconnected:
-                    _vibrator.Off();
+                    CallNotifier("off");
                     Debug.WriteLine("IM Modality Disconnected");
                     break;
                 case ModalityState.Joining:
-                    _vibrator.Off();
+                    CallNotifier("off");
                     Debug.WriteLine("IM Modality Joining");
                     break;
             }
@@ -125,11 +112,11 @@ namespace LyncRingNotify
             switch (e.NewState)
             {
                 case ConversationState.Parked:
-                    _vibrator.Off();
+                    CallNotifier("off");
                     Debug.WriteLine("IM Parked");
                     break;
                 case ConversationState.Terminated:
-                    _vibrator.Off();
+                    CallNotifier("off");
                     Debug.WriteLine("IM Terminated");
                     break;
             }
@@ -140,15 +127,15 @@ namespace LyncRingNotify
             switch (e.NewState)
             {
                 case ModalityState.Connected:
-                    _vibrator.Off();
+                    CallNotifier("off");
                     Debug.WriteLine("AV Modality Connected");
                     break;
                 case ModalityState.Disconnected:
-                    _vibrator.Off();
+                    CallNotifier("off");
                     Debug.WriteLine("AV Modality Disconnected");
                     break;
                 case ModalityState.Joining:
-                    _vibrator.Off();
+                    CallNotifier("off");
                     Debug.WriteLine("AV Modality Joining");
                     break;
             }
@@ -160,11 +147,11 @@ namespace LyncRingNotify
             switch (e.NewState)
             {
                 case ConversationState.Parked:
-                    _vibrator.Off();
+                    CallNotifier("off");
                     Debug.WriteLine("AV Parked");
                     break;
                 case ConversationState.Terminated:
-                    _vibrator.Off();
+                    CallNotifier("off");
                     Debug.WriteLine("AV Terminated");
                     break;
             }
@@ -176,13 +163,20 @@ namespace LyncRingNotify
                    conversation.Modalities[modalityType].State == ModalityState.Notified;
         }
 
+        private void CallNotifier(string param)
+        {
+            string notifierPath = Application.StartupPath + "\\notifier.bat";
+            var startInfo = new ProcessStartInfo();
+            startInfo.FileName = System.Environment.GetEnvironmentVariable("ComSpec");
+            startInfo.CreateNoWindow = true;
+            startInfo.UseShellExecute = false;
+            startInfo.Arguments = string.Format("/c {0} {1}", notifierPath, param);
+            Process.Start(startInfo);
+        }
+
         private void Form1_FormClosing(object sender, FormClosingEventArgs e)
         {
-            if (_vibrator != null)
-            {
-                _vibrator.Off();
-                _vibrator.Close();
-            }
+            CallNotifier("close");
         }
 
         private void exitToolStripMenuItem_Click(object sender, EventArgs e)
@@ -193,10 +187,7 @@ namespace LyncRingNotify
 
         private void notifyIcon1_Click(object sender, EventArgs e)
         {
-            if (_vibrator != null)
-            {
-                _vibrator.Off();
-            }
+            CallNotifier("off");
         }
     }
 }

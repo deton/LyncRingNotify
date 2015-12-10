@@ -43,7 +43,7 @@ notifier.batがusbvibrationデバイスを制御します。
 notifier.batの第1引数は以下のいずれか。
 
 * im: IM着信時
-* audio: 電話着信時
+* tel: 電話着信時
 * off: 通知オフ
 
 第2引数は電話の場合の発信者。

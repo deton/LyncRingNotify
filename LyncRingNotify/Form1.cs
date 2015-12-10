@@ -69,7 +69,7 @@ namespace LyncRingNotify
             if (ModalityIsNotified(conversation, ModalityTypes.AudioVideo))
             {
                 hasAudioVideo = true;
-                notifyParam = "audio";
+                notifyParam = "tel";
                 conversation.Modalities[ModalityTypes.AudioVideo].ModalityStateChanged += AVModalityStateChanged;
                 conversation.StateChanged += AVStateChanged;
                 Debug.WriteLine("AV Notified");

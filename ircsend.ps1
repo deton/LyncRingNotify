@@ -1,25 +1,30 @@
 # ircsend.ps1
 Param(
-    [string]$msg
+    [string]$from,
+    [string]$server = "10.254.166.45",
+    [int]$port = 6667,
+    [string]$channel = "#projA",
+    [string]$botnick = "[LyncDet]",
+    [string]$targetnick = "deton",
+    [switch]$im
 )
 
-$addr = "10.254.166.45"
-$port = 6668
 $ErrorActionPreference = "Stop"
 
-function interact($client) {
-    $stream = $client.GetStream()
-    $enc = New-Object System.Text.AsciiEncoding
+$client = New-Object System.Net.Sockets.TcpClient($server, $port)
+$stream = $client.GetStream()
+$writer = New-Object IO.StreamWriter($stream, [Text.Encoding]::ASCII)
 
-    try {
-        $data = $enc.GetBytes("USER lyncring b c d`nNICK [LyncDet]`nJOIN #projA`nPRIVMSG #projA :ring from " + $msg + "`nQUIT`n")
-        $stream.Write($data, 0, $data.length)
-    } finally {
-        $stream.Close()
-    }
+$writer.WriteLine("USER lyncring 0 * :LyncRingNotify")
+$writer.WriteLine("NICK $botnick")
+if ($im) {
+    $writer.WriteLine("PRIVMSG $targetnick :@$targetnick IM from $from")
+} else {
+    $writer.WriteLine("JOIN $channel")
+    $writer.WriteLine("PRIVMSG $channel :@$targetnick RING from $from")
 }
-
-$client = New-Object System.Net.Sockets.TcpClient ($addr, $port)
-Write-Verbose "Connection to $($addr) $($port) port [tcp/*] succeeded!"
-interact $client
+$writer.WriteLine("QUIT")
+$writer.Flush()
+$writer.Close()
+$stream.Close()
 $client.Close()

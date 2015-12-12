@@ -4,6 +4,7 @@ Microsoft Lync(Skype for Business)で電話がかかってきた時に、
 バイブレーションで通知するモノです。
 
 ![写真](../img/usbvibration.jpg)
+
 (銀色の部分が振動モータ)
 
 ## 特徴
@@ -59,7 +60,7 @@ notifier.batの第1引数は以下のいずれか。
 * off: 通知オフ
 
 第2引数は電話の場合の発信者。
-tel:xxxxxxまたはsip:taro@example.jp
+`tel:xxxxxx`または`sip:taro@example.jp`
 
 usbvibrationの制御は簡単なので直接notifier.batから実行していますが、
 CDトレイ制御やIRC通知はPowerShellスクリプトを実行しています。

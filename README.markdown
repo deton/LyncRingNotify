@@ -3,25 +3,37 @@
 Microsoft Lync(Skype for Business)で電話がかかってきた時に、
 バイブレーションで通知するモノです。
 
+![写真](../img/usbvibration.jpg)
+(銀色の部分が振動モータ)
+
 ## 特徴
-* 通知はbatファイル実行なので、通知方法はカスタマイズ可能。
- * USB接続振動モータ
- * USB接続LED。blink(1)等
- * CDトレイを開く(eject)
- * IRCに通知。別のLinuxマシンを使っていても、IRC通知に気付ける。
-   この通知に反応して、Microsoft Exchangeサーバから予定を取得して
-   チャンネルに発言する、
-   [予定通知ボット](https://github.com/deton/ExchangeAppointmentBot)
-   との連携も可能。
-* USB接続バイブレーション用デバイス
+* USB接続バイブレーション用デバイス(USB接続振動モータ)
+	* スマホやAndroidタブレットで使えるバイブレーション通知を、
+	  PCでも使えるようになります。
+* 通知用にbatファイルを実行するので、通知方法はカスタマイズ可能
+	* USB接続振動モータで通知
+	* USB接続LEDで通知。blink(1)等
+	* CDトレイを開いて通知(eject)
+	* IRC(Internet Relay Chat)に通知。
+		* Lync用Windowsマシンとは別のLinuxマシンを使って作業していても、
+		  Linux上IRCクライアントに通知が表示されるので
+		  着信に気付きやすくなります。
+		* この通知に反応して、Microsoft Exchangeサーバから
+		  その人の予定を取得してチャンネルに発言する、
+		  [予定通知ボット](https://github.com/deton/ExchangeAppointmentBot)
+		  との連携も可能。
 
 ## 背景
 会社の内線電話が、構内PHSからLyncになったのですが、
-着信音に気付かないことがあったので、
+下記理由もあって着信音に気付かないことがあったので、
 USB接続振動モータを動かすようにしてみました。
 
-(あまりスピーカ音量を大きくすると、何かの操作をした際に音が出て気になるので
-音量を小さめにしているのも、気付きにくい一因)
++ あまりスピーカ音量を大きくすると、何かの操作をした際に音が出て気になるので
+  音量は小さめ
+  (PHS時代はPCにはスピーカも接続してなくて普段はミュート状態。
+  Lync電話の着信用に新たにスピーカを接続)
++ 近くの会議スペースの声が大きくて集中できないのでイヤホンをすると、
+  今度は着信音に気付きにくくなる
 
 Lync用ハンドセットにバイブレーション機能があればよかったのですが、
 配られたUSBハンドセットには付いてないようだったので。
@@ -31,14 +43,14 @@ IMを受信した際も、別のLinuxマシンを使っていると多くの場�
 通話とは別の振動パターンにしています。
 
 ## 構成
-* Lync着信検知プログラムLyncRingNotify
+* Lync着信検知プログラムLyncRingNotify.exe
 	* 通知実行batファイルnotifier.bat
 		* USB接続バイブレーション用デバイスusbvibration
-		* CDトレイ制御PowerShell script: [eject.ps1](https://gallery.technet.microsoft.com/scriptcenter/EjectClose-CDDVD-drive-56d39361)
-		* IRC通知PowerShell script: ircsend.ps1
+		* IRC通知PowerShellスクリプト: ircsend.ps1
+		* CDトレイ制御PowerShellスクリプト: eject.ps1
 
-LyncRingNotifyがLyncRingNotifyと同じディレクトリにあるnotifier.batを呼んで、
-notifier.batがusbvibrationデバイスを制御します。
+LyncRingNotify.exeが同じディレクトリにあるnotifier.batを呼んで、
+notifier.batがCOM経由でusbvibrationデバイスを制御します。
 
 notifier.batの第1引数は以下のいずれか。
 
@@ -50,26 +62,30 @@ notifier.batの第1引数は以下のいずれか。
 tel:xxxxxxまたはsip:taro@example.jp
 
 usbvibrationの制御は簡単なので直接notifier.batから実行していますが、
-CDトレイ制御やIRC通知はPowerShell scriptを実行しています。
+CDトレイ制御やIRC通知はPowerShellスクリプトを実行しています。
 
-## Lync着信検知プログラムLyncRingNotify
-Lync SDKを使っています。
-
-Lyncの着信検知は、
-Google検索やgithub検索で見つかるコードを参考にして作っています。
+## セットアップ手順
+* usbvibration
+	* [A-Star 32U4 Microのドライバをインストール](https://www.pololu.com/docs/0J61/6.1)
+* LyncRingNotify
+	* Lyncをインストール・起動
+	* .NET Framework 4 Client Profileが入っていなければインストール
+	* LyncSdkRedist.msiを実行してLync SDKをセットアップ
+	* notifier.batをエディタで開いてCOM変数の値を、
+	  Windowsのコントロールパネル→デバイス マネージャのポートで確認した
+	  usbvibrationのCOMの値に変更。
+	* LyncRingNotify.exeを起動
 
 ## USB接続バイブレーション用デバイスusbvibration
-スマホやAndroidタブレットには普通に内蔵されているので
-PC用にもあるといいかもと思って作成。
-
-blink(1)のようなUSB接続LEDはあるのでバイブレーションもあるといいかもと思って作成。
+blink(1)のようなUSB接続LEDはあるので
+バイブレーションもあるといいかもと思って作成。
 
 振動モータを使っています。
 振動モータ用回路は、
 [『Prototyping Lab――「作りながら考える」ためのArduino実践レシピ』](http://www.oreilly.co.jp/books/9784873114538/)
 にあるものそのままです。
 
-バイブレーションを止めるためのタクトスイッチを(後から思い付いて)付けました。
+バイブレーションを止めるためのタクトスイッチを付けました。
 (LyncRingNotifyプログラム側から停止されるはずですが、念のため)
 
 COM6等に対して、v512. 等の文字列を書き込むことで制御します。
@@ -82,6 +98,8 @@ duty(0-1023)とperiod[ms]を指定可能です。
 period指定は省略可能。
 
 ### 部品
+![内部写真](../img/usbvibration-inside.jpg)
+
 + [Pololu A-Star 32U4 Micro](https://www.switch-science.com/catalog/1748/)(Arduino互換機)
 + [振動モータ](http://www.sengoku.co.jp/mod/sgk_cart/detail.php?code=EEHD-4HSR)
 + トランジスタ KSC1815
@@ -94,22 +112,34 @@ period指定は省略可能。
 + はさみで切れるユニバーサル基板
 + タクトスイッチ(2本足) 1個
 
-## IRC通知PowerShell script: ircsend.ps1
+## Lync着信検知プログラムLyncRingNotify
+Lync SDKを使っています。
+使うためには、Lyncクライアントが動作している必要があります。
+
+## IRC通知PowerShellスクリプト: ircsend.ps1
 IRCサーバに接続されるまで時間がかかる場合は、
 ファイアウォールで113ポート(identd)を許可してみてください。
 identdのタイムアウト待ちで時間がかかっている可能性があるので。
 
-## CDトレイ制御PowerShell script: eject.ps1
+## CDトレイ制御PowerShellスクリプト: eject.ps1
 以下のスクリプトが使えます。
 ただし、Close動作は一部修正要。
 EjectMedia()でなくCloseTray()にする必要があります。
 
-https://gallery.technet.microsoft.com/scriptcenter/EjectClose-CDDVD-drive-56d39361
+[Eject/Close CD/DVD drive using PowerShell](https://gallery.technet.microsoft.com/scriptcenter/EjectClose-CDDVD-drive-56d39361)
+
+## 他の通知方法案
+* ポート毎給電制御可能なUSBハブを制御して、USB扇風機を動かす
 
 ## 参考
 * [PHS着信時電波を検出してIRC通知](https://github.com/deton/phsringnotify)
 * PC用LED。[PresenceStick](https://github.com/deton/presencestick)、
-  blink(1)、
+  [blink(1)](http://blink1.thingm.com/)、
   [BlinkStick](http://www.blinkstick.com/)、
   [Luxafor](http://internet.watch.impress.co.jp/docs/yajiuma/20150123_684991.html)等
-* Lyncのプレゼンス状態等をUSB接続LED等に表示するものはgithubをLyncで検索するといろいろあり
+* Lyncのプレゼンス状態等をUSB接続LEDに表示するものは多数あり。
+  [Busylight](http://www.link-corp.co.jp/busylight/)、
+  [Blynclight](http://www.blynclight.com/)、
+  [LyncFellow](http://glueckkanja.github.io/LyncFellow/)、
+  [beakn](https://github.com/jonbgallant/beakn)、
+  [LyncBlink](https://github.com/benbong/LyncBlink)等

@@ -1,7 +1,6 @@
 ﻿// https://web.archive.org/web/20120224054715/http://www.codelync.com/2011/11/developing-screen-pop-applications
 // https://github.com/sierrodc/Arduino-Lync-monitor
 // https://msdn.microsoft.com/en-us/library/hh530042.aspx
-// http://www.mztm.jp/2013/03/17/serialcommnunication/
 using System;
 using System.Windows.Forms;
 using Microsoft.Lync.Model;

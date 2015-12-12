@@ -130,7 +130,8 @@ EjectMedia()でなくCloseTray()にする必要があります。
 [Eject/Close CD/DVD drive using PowerShell](https://gallery.technet.microsoft.com/scriptcenter/EjectClose-CDDVD-drive-56d39361)
 
 ## 他の通知方法案
-* ポート毎給電制御可能なUSBハブを制御して、USB扇風機を動かす
+* ポート毎給電制御可能なUSBハブを制御して、
+  USB扇風機を動かしたりUSBデスクライトを点灯する
 
 ## 参考
 * [PHS着信時電波を検出してIRC通知](https://github.com/deton/phsringnotify)

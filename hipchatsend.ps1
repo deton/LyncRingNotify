@@ -4,17 +4,12 @@ Param(
     [string]$server = "hipchat.example.jp",
     [string]$room = "Default",
     [string]$targetnick = "deton",
-    [string]$apitoken = "XXXX",
+    [string]$notificationtoken = "XXXX",
+    [string]$messagetoken = "YYYY",
     [switch]$im
 )
 
 $ErrorActionPreference = "Stop"
-
-if ($im) {
-    $msg = "@$targetnick IM from $from"
-} else {
-    $msg = "@$targetnick RING from $from"
-}
 
 # é©å»èêñºÇÃèÿñæèëÇ≈Ç‡ãñâ¬
 # http://qiita.com/nightyknite/items/b4db8766c0b94764cd3c
@@ -31,4 +26,12 @@ add-type @"
 "@
 [System.Net.ServicePointManager]::CertificatePolicy = New-Object TrustAllCertsPolicy
 
-Invoke-RestMethod -Uri "https://$server/v2/room/$room/notification?auth_token=$apitoken" -Method POST -ContentType application/json -Body "{`"notify`":true,`"message`":`"$msg`"}"
+if ($im) {
+    # send private one-on-one message
+    $msg = "@$targetnick IM from $from"
+    Invoke-RestMethod -Uri "https://$server/v2/user/@$targetnick/message?auth_token=$messagetoken" -Method POST -ContentType application/json -Body "{`"notify`":true,`"message`":`"$msg`"}"
+} else {
+    # send room notification
+    $msg = "@$targetnick RING from $from"
+    Invoke-RestMethod -Uri "https://$server/v2/room/$room/notification?auth_token=$notificationtoken" -Method POST -ContentType application/json -Body "{`"notify`":true,`"message`":`"$msg`"}"
+}

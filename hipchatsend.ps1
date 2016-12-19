@@ -9,6 +9,12 @@ Param(
     [switch]$im
 )
 
+# $from (tel:NNNN or mailto:MMMM)Ç©ÇÁñºëOÇ÷ÇÃïœä∑ï\
+$tel2name = @{
+	"tel:12345678" = "OSC";
+}
+$fromname = $tel2name[$from]
+
 $ErrorActionPreference = "Stop"
 
 # é©å»èêñºÇÃèÿñæèëÇ≈Ç‡ãñâ¬
@@ -28,10 +34,10 @@ add-type @"
 
 if ($im) {
     # send private one-on-one message
-    $msg = "@$targetnick IM from $from"
-    Invoke-RestMethod -Uri "https://$server/v2/user/@$targetnick/message?auth_token=$messagetoken" -Method POST -ContentType application/json -Body "{`"notify`":true,`"message`":`"$msg`"}"
+    $msg = "@$targetnick IM from $fromname $from"
+    Invoke-RestMethod -Uri "https://$server/v2/user/@$targetnick/message?auth_token=$messagetoken" -Method POST -ContentType "application/json;charset=utf-8" -Body "{`"notify`":true,`"message`":`"$msg`"}"
 } else {
     # send room notification
-    $msg = "@$targetnick RING from $from"
-    Invoke-RestMethod -Uri "https://$server/v2/room/$room/notification?auth_token=$notificationtoken" -Method POST -ContentType application/json -Body "{`"notify`":true,`"message`":`"$msg`"}"
+    $msg = "@$targetnick RING from $fromname $from"
+    Invoke-RestMethod -Uri "https://$server/v2/room/$room/notification?auth_token=$notificationtoken" -Method POST -ContentType "application/json;charset=utf-8" -Body "{`"notify`":true,`"message`":`"$msg`"}"
 }

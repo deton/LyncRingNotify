@@ -9,6 +9,12 @@ Param(
     [switch]$im
 )
 
+# $from (tel:NNNN or mailto:MMMM)‚©‚ç–¼‘O‚Ö‚Ì•ÏŠ·•\
+$tel2name = @{
+	"tel:12345678" = "OSC";
+}
+$fromname = $tel2name[$from]
+
 $ErrorActionPreference = "Stop"
 
 $client = New-Object System.Net.Sockets.TcpClient($server, $port)
@@ -18,10 +24,10 @@ $writer = New-Object IO.StreamWriter($stream, [Text.Encoding]::ASCII)
 $writer.WriteLine("USER lyncring 0 * :LyncRingNotify")
 $writer.WriteLine("NICK $botnick")
 if ($im) {
-    $writer.WriteLine("PRIVMSG $targetnick :@$targetnick IM from $from")
+    $writer.WriteLine("PRIVMSG $targetnick :@$targetnick IM from $fromname $from")
 } else {
     $writer.WriteLine("JOIN $channel")
-    $writer.WriteLine("PRIVMSG $channel :@$targetnick RING from $from")
+    $writer.WriteLine("PRIVMSG $channel :@$targetnick RING from $fromname $from")
 }
 $writer.WriteLine("QUIT")
 $writer.Flush()

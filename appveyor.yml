@@ -6,3 +6,5 @@ install:
   - msiexec /i lyncsdk64.msi /quiet /qn /norestart /log install.log
 build:
   verbosity: minimal
+artifacts:
+  - path: LyncRingNotify\bin\Release\LyncRingNotify.exe

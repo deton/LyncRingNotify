@@ -1,7 +1,7 @@
 version: 1.0.{build}
 image: Visual Studio 2013
 install:
-  - ps: (new-object net.webclient).DownloadFile('https://download.microsoft.com/download/0/5/6/056013D5-98F8-4B79-88EF-D221E519C37F/lyncsdk.exe', 'lyncsdk.exe')
+  - curl -fsS -o lyncsdk.exe https://download.microsoft.com/download/0/5/6/056013D5-98F8-4B79-88EF-D221E519C37F/lyncsdk.exe
   - 7z x lyncsdk.exe
   - msiexec /i lyncsdk64.msi /quiet /qn /norestart /log install.log
 build:

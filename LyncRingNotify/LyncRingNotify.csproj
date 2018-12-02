@@ -39,7 +39,7 @@
   <ItemGroup>
     <Reference Include="Microsoft.Lync.Model, Version=15.0.0.0, Culture=neutral, PublicKeyToken=71e9bce111e9429c, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
-      <HintPath>\Program Files (x86)\Microsoft Lync\SDK\Assemblies\Desktop\Microsoft.Lync.Model.dll</HintPath>
+      <HintPath>\Program Files (x86)\Microsoft Office 2013\LyncSDK\Assemblies\Deskto\Microsoft.Lync.Model.dll</HintPath>
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />

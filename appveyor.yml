@@ -8,4 +8,4 @@ configuration: Release
 build:
   verbosity: minimal
 artifacts:
-  - path: LyncRingNotify\bin\Release\LyncRingNotify.exe
+  - path: LyncRingNotify\bin\Release\*

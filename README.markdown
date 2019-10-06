@@ -23,6 +23,7 @@ Microsoft Lync(Skype for Business)で電話がかかってきた時に、
 		  その人の予定を取得してチャンネルに発言する、
 		  [予定通知ボット](https://github.com/deton/ExchangeAppointmentBot)
 		  との連携も可能。
+	* Slackに通知
 	* HipChatに通知
 
 ## 背景
@@ -49,6 +50,7 @@ IMを受信した際も、別のLinuxマシンを使っていると多くの場�
 	* 通知実行batファイルnotifier.bat
 		* USB接続バイブレーション用デバイスusbvibration
 		* IRC通知PowerShellスクリプト: ircsend.ps1
+		* Slack通知PowerShellスクリプト: slacksend.ps1
 		* HipChat通知PowerShellスクリプト: hipchatsend.ps1
 		* CDトレイ制御PowerShellスクリプト: eject.ps1
 
@@ -65,7 +67,7 @@ notifier.batの第1引数は以下のいずれか。
 `tel:xxxxxx`または`sip:taro@example.jp`
 
 usbvibrationの制御は簡単なので直接notifier.batから実行していますが、
-CDトレイ制御やIRC/HipChat通知はPowerShellスクリプトを実行しています。
+CDトレイ制御やIRC/Slack/HipChat通知はPowerShellスクリプトを実行しています。
 
 ## セットアップ手順
 * usbvibration
@@ -123,6 +125,10 @@ Lync SDKを使っています。
 IRCサーバに接続されるまで時間がかかる場合は、
 ファイアウォールで113ポート(identd)を許可してみてください。
 identdのタイムアウト待ちで時間がかかっている可能性があるので。
+
+## Slack通知PowerShellスクリプト: slacksend.ps1
+Slack Web APIを使ってメッセージを送ります。
+Invoke-RestMethodを使っているのでPowerShell 3.0以降で実行してください。
 
 ## HipChat通知PowerShellスクリプト: hipchatsend.ps1
 HipChat REST API v2を使ってroomにメッセージを送ります。
